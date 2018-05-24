@@ -1,0 +1,12 @@
+name: gisborne_odin_check
+title: gisborne_odin_check
+username:
+account: guolivar
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 344354
+bundleId: 1390962
+url: https://guolivar.shinyapps.io/gisborne_odin_check/
+when: 1527166343.51464
+asMultiple: FALSE
+asStatic: FALSE
