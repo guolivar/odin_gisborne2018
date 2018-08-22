@@ -45,9 +45,9 @@ for (i in (1:nsites)){
   curr_data$Last_reading[i] <- as.POSIXct(jreq2[[1]]$logged,tz='UTC')
 }
 
-curr_data$delay <- curr_data$delay <- floor(difftime(Sys.time(),curr_data$Last_reading, units = 'secs'))
+curr_data$delay <- floor(difftime(Sys.time(),curr_data$Last_reading, units = 'secs'))
 
-curr_data$mask <- as.numeric(curr_data$delay < 120)
+curr_data$mask <- as.numeric(curr_data$delay < 3600)
 reboot_odins <- subset(curr_data,mask == 0)
 output$table <- DT::renderDataTable({
   DT::datatable({
@@ -136,15 +136,17 @@ for (i_dev in (1:ndev)){
   curr_data$RH[i_dev] <- mean(c_data$RH,na.rm = TRUE)
 }
 
+curr_data$mask[is.na(curr_data$PM2.5)] <- 0
+curr_data$PM2.5[is.na(curr_data$PM2.5)] <- 0
 
 output$plot1 <- renderPlot({
   cmap <- get_map(c(centre_lon,centre_lat),zoom=13,scale = 2)
   ggmap(cmap) +
     geom_point(data = curr_data,
                aes(x=lon,y=lat,colour=PM2.5),
-               alpha=1,
+               alpha=curr_data$mask,
                size=15) +
-    geom_text(data=curr_data,aes(x=lon,y=lat,label=substring(ODIN,1,9))) +
+    geom_text(data=curr_data,aes(x=lon,y=lat,label=substring(ODIN,1,9)),colour = 'red') +
     ggtitle("PM2.5 average for the last 12 hours") +
     scale_colour_gradient(low="white", high="red")
   },width = 1024,height = 1024)

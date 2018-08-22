@@ -5,8 +5,8 @@ account: guolivar
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 344354
-bundleId: 1390962
+bundleId: 1404298
 url: https://guolivar.shinyapps.io/gisborne_odin_check/
-when: 1527166343.51464
+when: 1527823535.64881
 asMultiple: FALSE
 asStatic: FALSE
