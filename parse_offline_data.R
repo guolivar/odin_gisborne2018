@@ -8,24 +8,7 @@
 # Prepare libraries
 library(librarian) # To more flexibly manage packages
 shelf(readr,
-      reshape2,
-      automap,
-      raster,
-      gstat,
-      sp,
-      rgdal,
-      ggmap,
-      scales,
-      gstat,
-      ncdf4,
-      zoo,
-      openair,
-      stringi,
-      viridis,
-      dplyr,
-      RColorBrewer,
-      purrr,
-      magick)
+      openair)
 # Set the data folder ####
 data_path <- "~/data/ODIN_SD/Gisborne/WORKING/"
 folders_list <- dir(data_path)
@@ -98,8 +81,6 @@ for (i in (1:length(folders_list))){
 }
 
 # Get devices locations ####
-proj4string <- CRS('+init=epsg:2193')
-
 odin_locations <- readr::read_delim("odin_locations.txt", 
                              "\t", escape_double = FALSE, trim_ws = TRUE)
 nsites <- length(odin_locations$serialn)
