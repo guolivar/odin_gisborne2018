@@ -14,9 +14,10 @@ shelf(readr,
       sp,
       rgdal,
       ggmap,
+      ggplot2,
       scales,
       gstat,
-      ncdf4,
+      RNetCDF,
       RJSONIO,
       curl,
       base64enc,
@@ -30,6 +31,8 @@ shelf(readr,
       magick)
 # Set the data folder ####
 data_path <- "~/data/ODIN_SD/Gisborne/WORKING/"
+plot_path <- "~/data/ODIN_SD/Gisborne/"
+
 # Load data
 load('alldata.RData')
 load('alldataTAVG.RData')
@@ -318,13 +321,11 @@ close.nc(nc.idw2)
 #               format(min(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),"_",
 #               format(max(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),
 #               ".mp4"))
-
 system(paste0("ffmpeg -f image2 -r 6 -pattern_type glob -i '",
-              data_path,
-              "../idw2/",
+              "/home/gustavo/data/ODIN_SD/Gisborne/idw2/*.png'",
               "*.png' ",
-              data_path,
-              "../idw2/",
+              plot_path,
+              "idw2/",
               format(min(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),"_",
               format(max(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),
               ".mp4"))
@@ -337,8 +338,8 @@ system(paste0("youtube-upload --title=\"Gisborne ",
               " to ",
               format(max(all.data.tavg$date) + 12*3600,format = "%Y%m%d %H:%M"),
               "\" --client-secrets=client_secrets.json ",
-              data_path,
-              "../idw2/",
+              plot_path,
+              "idw2/",
               format(min(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),"_",
               format(max(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),
               ".mp4 --playlist=\"Gisborne 2018 - ODIN\""))
@@ -397,21 +398,21 @@ RCurl::ftpUpload(paste0(data_path,
                         ".tgz"))
 
 ## Remove files ####
-system(paste0("rm -rf ",
-              data_path,
-              "../idw/*"))
-system(paste0("rm -rf ",
-              data_path,
-              "../idw2/*"))
-system(paste0('rm -f ',
-              data_path,
-              'all.data',
-              format(min(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),"_",
-              format(max(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),
-              ".txt"))
-system(paste0('rm -f ',
-              data_path,
-              'all.data.tavg',
-              format(min(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),"_",
-              format(max(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),
-              ".txt"))
+# system(paste0("rm -rf ",
+#               data_path,
+#               "../idw/*"))
+# system(paste0("rm -rf ",
+#               data_path,
+#               "../idw2/*"))
+# system(paste0('rm -f ',
+#               data_path,
+#               'all.data',
+#               format(min(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),"_",
+#               format(max(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),
+#               ".txt"))
+# system(paste0('rm -f ',
+#               data_path,
+#               'all.data.tavg',
+#               format(min(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),"_",
+#               format(max(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),
+#               ".txt"))
