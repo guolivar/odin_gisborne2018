@@ -3,3 +3,9 @@
 .RData
 .Ruserdata
 secret*
+*.RData
+*.Rout
+*.png
+*.nc
+*.Rdata
+*.html

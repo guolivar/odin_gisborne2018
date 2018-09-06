@@ -231,6 +231,7 @@ ggmap(ca) +
   geom_point(data=as.data.frame(summary_mean_map),aes(x=lon,y=lat,colour = PM2.5),size = 5) +
   scale_colour_continuous(low="white", high="red",limits=c(0, max(summary_mean_map$PM2.5)),
                           name = "PM2.5", oob=squish)
+
 #' ### PM~10~
 ggmap(ca) + 
   geom_point(data=as.data.frame(summary_mean_map),aes(x=lon,y=lat,colour = PM10),size = 5) +
@@ -243,6 +244,33 @@ ggmap(ca) +
   scale_colour_continuous(low="white", high="red",limits=c(0, max(summary_mean_map$PM10 - summary_mean_map$PM2.5)),
                           name = "PMcoarse", oob=squish)
 
+#' ## Kriging
+
+proj4string_NZTM <- CRS('+init=epsg:2193')
+proj4string_latlon <- CRS('+init=epsg:4326')
+summary_mean_map <- spTransform(summary_mean_map,proj4string_NZTM)
+cellsize <- 100
+min_x <- summary_mean_map@bbox[1,1] - cellsize#minimun x coordinate
+min_y <- summary_mean_map@bbox[2,1] - cellsize #minimun y coordinate
+max_x <- summary_mean_map@bbox[1,2] + cellsize #mximum x coordinate
+max_y <- summary_mean_map@bbox[2,2] + cellsize #maximum y coordinate
+
+x_length <- max_x - min_x #easting amplitude
+y_length <- max_y - min_y #northing amplitude
+ncol <- round(x_length/cellsize,0) #number of columns in grid
+nrow <- round(y_length/cellsize,0) #number of rows in grid
+
+grid <- GridTopology(cellcentre.offset=c(min_x,min_y),cellsize=c(cellsize,cellsize),cells.dim=c(ncol,nrow))
+
+#Convert GridTopolgy object to SpatialPixelsDataFrame object. #####
+grid <- SpatialPixelsDataFrame(grid,
+                               data=data.frame(id=1:prod(ncol,nrow)),
+                               proj4string=CRS('+init=epsg:2193'))
+surf.krig <- autoKrige(PM2.5 ~ 1,data=summary_mean_map,new_data = grid, input_data=summary_mean_map)
+
+proj4string(surf.krig$krige_output) <- CRS('+init=epsg:2193')
+
+plot(rasterFromXYZ(cbind(surf.krig$krige_output@coords,surf.krig$krige_output@data$var1.pred)))
 
 # Save the "all.data" dataframe
 save(all.data,file = 'alldata.RData')
