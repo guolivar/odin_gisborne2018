@@ -135,7 +135,7 @@ for (d_slice in (1:ndates)){
     scale_fill_gradient(low="white", high="red",limits=c(0, cmax), name = "PM2.5", oob=squish) +
     geom_point(data=points,aes(x=lon,y=lat),colour = "black") +
     ggtitle(paste(as.character(all_dates[d_slice]+12*3600),"NZST"))
-  ggsave(filename=paste0(data_path,'../idw2/',format(all_dates[d_slice]+12*3600,format = "%Y-%m-%d %H:%M"),'.png'),
+  ggsave(filename=paste0(plot_path,'idw2/',format(all_dates[d_slice]+12*3600,format = "%Y-%m-%d %H:%M"),'.png'),
          plot=map_out,
          width=6,
          height=6,

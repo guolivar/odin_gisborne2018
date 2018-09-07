@@ -101,6 +101,9 @@ for (d_slice in (1:ndates)){
     next
   }
   valid_dates[d_slice] <- TRUE
+  if (length(unique(c_data$PM2.5)) == 1){
+    c_data$PM2.5 <- c_data$PM2.5 + rnorm(length(c_data$PM2.5),0,0.01)
+  }
   surf.krig <- autoKrige(PM2.5 ~ 1,data=c_data,new_data = grid, input_data=c_data)
   surf.krig$krige_output$timestamp <-d_slice
   proj4string(surf.krig$krige_output) <- CRS('+init=epsg:2193')
@@ -139,7 +142,7 @@ for (d_slice in (1:ndates)){
     scale_fill_gradient(low="white", high="red",limits=c(0, cmax), name = "PM2.5", oob=squish) +
     geom_point(data=points,aes(x=lon,y=lat),colour = "black") +
     ggtitle(paste(as.character(all_dates[d_slice]+12*3600),"NZST"))
-  ggsave(filename=paste0(data_path,'../krig/',format(all_dates[d_slice]+12*3600,format = "%Y-%m-%d %H:%M"),'.png'),
+  ggsave(filename=paste0(plot_path,'krig/',format(all_dates[d_slice]+12*3600,format = "%Y-%m-%d %H:%M"),'.png'),
          plot=map_out,
          width=6,
          height=6,
