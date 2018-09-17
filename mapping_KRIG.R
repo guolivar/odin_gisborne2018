@@ -35,7 +35,7 @@ plot_path <- "~/data/ODIN_SD/Gisborne/"
 
 # Load data
 load('alldata.RData')
-load('alldataTAVG.RData')
+load('alldata1hr.RData')
 # Some useful constants
 proj4string_NZTM <- CRS('+init=epsg:2193')
 proj4string_latlon <- CRS('+init=epsg:4326')
@@ -97,7 +97,8 @@ i <- 0
 for (d_slice in (1:ndates)){
   c_data <- subset(all.data.tavg,subset = (date==all_dates[d_slice]))
   
-  if (length(unique(c_data$ODINsn))<2){
+  if (length(unique(c_data$ODINsn))<8){
+    print('Too few points')
     next
   }
   valid_dates[d_slice] <- TRUE
@@ -161,7 +162,7 @@ save(list = c('raster_cat_krig_LL'),file = paste0("raster_odin_LL_krig.RData"))
 # Krig
 lat_dim <- unique(coordinates(raster_cat_krig_LL)[,2])
 lon_dim <- unique(coordinates(raster_cat_krig_LL)[,1])
-tim_dim <- all_dates[valid_dates]
+tim_dim <- all_dates[valid_dates==1]
 nc.krig <- create.nc("odin_krig.nc")
 # Dimensions specifications
 dim.def.nc(nc.krig, "time", unlim=TRUE)
@@ -214,8 +215,7 @@ close.nc(nc.krig)
 ## Create MP4 video ####
 
 system(paste0("ffmpeg -f image2 -r 6 -pattern_type glob -i '",
-              "/home/gustavo/data/ODIN_SD/Gisborne/krig/*.png'",
-              "*.png' ",
+              "~/data/ODIN_SD/Gisborne/krig/*.png' ",
               plot_path,
               "krig/",
               format(min(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),"_",
