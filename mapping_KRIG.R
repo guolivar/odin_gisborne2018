@@ -159,6 +159,7 @@ save(list = c('raster_cat_krig_LL'),file = paste0("raster_odin_LL_krig.RData"))
 lat_dim <- unique(coordinates(raster_cat_krig_LL)[,2])
 lon_dim <- unique(coordinates(raster_cat_krig_LL)[,1])
 tim_dim <- all_dates[valid_dates]
+
 nc.krig <- create.nc("odin_krig.nc")
 # Dimensions specifications
 dim.def.nc(nc.krig, "time", unlim=TRUE)
@@ -188,7 +189,7 @@ att.put.nc(nc.krig,"pm2p5","missing_value","NC_FLOAT",-999.9)
 
 # Global attributes
 att.put.nc(nc.krig,"NC_GLOBAL","title","NC_CHAR","PM2.5 interpolated surface (Inverse Square Distance)")
-att.put.nc(nc.krig,"NC_GLOBAL","Conventions","NC_CHAR","CF-1.7")
+att.put.nc(nc.krig,"NC_GLOBAL","Conventions","NC_CHAR","CF-1.6")
 att.put.nc(nc.krig,"NC_GLOBAL","Institution","NC_CHAR","NIWA (National Institute of Water and Atmospheric Research, Auckland, New Zealand)")
 att.put.nc(nc.krig,"NC_GLOBAL","project_id","NC_CHAR","CONA - 2018")
 att.put.nc(nc.krig,"NC_GLOBAL","history","NC_CHAR",paste0(format(max(all.data.tavg$date),format = "%Y%m%d"),
