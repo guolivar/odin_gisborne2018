@@ -18,7 +18,8 @@ shelf(readr,
 data_path <- "~/data/ODIN_SD/Gisborne/WORKING/"
 folders_list <- dir(data_path,pattern = '00')
 # Define time average for output
-tavg <- '1 hour'
+tavg <- '1 hour' # This is for TimeAverage
+txt_tavg <- '1hr' # This is for file naming
 # Load data ####
 # Cycle through the folders to work with all the DATA.TXT files
 for (i in (1:length(folders_list))){
@@ -114,4 +115,4 @@ all.data.tavg[remove_idx,] <- NA
 all.data.tavg <- na.exclude(all.data.tavg)
 # Save the "all.data" dataframe
 save(all.data,file = 'alldata.RData')
-save(all.data.tavg,file = 'alldataTAVG.RData')
+save(all.data.tavg,file = paste0('alldata',txt_tavg,'.RData'))

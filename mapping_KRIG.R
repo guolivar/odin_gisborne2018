@@ -35,7 +35,7 @@ plot_path <- "~/data/ODIN_SD/Gisborne/"
 
 # Load data
 load('alldata.RData')
-load('alldataTAVG.RData')
+load('alldata1hr.RData')
 # Some useful constants
 proj4string_NZTM <- CRS('+init=epsg:2193')
 proj4string_latlon <- CRS('+init=epsg:4326')
@@ -97,10 +97,14 @@ i <- 0
 for (d_slice in (1:ndates)){
   c_data <- subset(all.data.tavg,subset = (date==all_dates[d_slice]))
   
-  if (length(unique(c_data$ODINsn))<2){
+  if (length(unique(c_data$ODINsn))<8){
+    print('Too few points')
     next
   }
   valid_dates[d_slice] <- TRUE
+  if (length(unique(c_data$PM2.5)) == 1){
+    c_data$PM2.5 <- c_data$PM2.5 + rnorm(length(c_data$PM2.5),0,0.01)
+  }
   surf.krig <- autoKrige(PM2.5 ~ 1,data=c_data,new_data = grid, input_data=c_data)
   surf.krig$krige_output$timestamp <-d_slice
   proj4string(surf.krig$krige_output) <- CRS('+init=epsg:2193')
@@ -139,7 +143,7 @@ for (d_slice in (1:ndates)){
     scale_fill_gradient(low="white", high="red",limits=c(0, cmax), name = "PM2.5", oob=squish) +
     geom_point(data=points,aes(x=lon,y=lat),colour = "black") +
     ggtitle(paste(as.character(all_dates[d_slice]+12*3600),"NZST"))
-  ggsave(filename=paste0(data_path,'../krig/',format(all_dates[d_slice]+12*3600,format = "%Y-%m-%d %H:%M"),'.png'),
+  ggsave(filename=paste0(plot_path,'krig/',format(all_dates[d_slice]+12*3600,format = "%Y-%m-%d %H:%M"),'.png'),
          plot=map_out,
          width=6,
          height=6,
@@ -158,8 +162,12 @@ save(list = c('raster_cat_krig_LL'),file = paste0("raster_odin_LL_krig.RData"))
 # Krig
 lat_dim <- unique(coordinates(raster_cat_krig_LL)[,2])
 lon_dim <- unique(coordinates(raster_cat_krig_LL)[,1])
+<<<<<<< HEAD
 tim_dim <- all_dates[valid_dates]
 
+=======
+tim_dim <- all_dates[valid_dates==1]
+>>>>>>> cdb32d1b93970a89d6837dbff39a46e7da7420ee
 nc.krig <- create.nc("odin_krig.nc")
 # Dimensions specifications
 dim.def.nc(nc.krig, "time", unlim=TRUE)
@@ -212,8 +220,7 @@ close.nc(nc.krig)
 ## Create MP4 video ####
 
 system(paste0("ffmpeg -f image2 -r 6 -pattern_type glob -i '",
-              "/home/gustavo/data/ODIN_SD/Gisborne/krig/*.png'",
-              "*.png' ",
+              "~/data/ODIN_SD/Gisborne/krig/*.png' ",
               plot_path,
               "krig/",
               format(min(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),"_",
