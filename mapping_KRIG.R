@@ -30,8 +30,8 @@ shelf(readr,
       purrr,
       magick)
 # Set the data folder ####
-data_path <- "~/data/ODIN_SD/Gisborne/WORKING/"
-plot_path <- "~/data/ODIN_SD/Gisborne/"
+data_path <- path.expand("~/data/ODIN_SD/Gisborne/WORKING/")
+plot_path <- path.expand("~/data/ODIN_SD/Gisborne/")
 
 # Load data
 load('alldata.RData')
@@ -162,12 +162,7 @@ save(list = c('raster_cat_krig_LL'),file = paste0("raster_odin_LL_krig.RData"))
 # Krig
 lat_dim <- unique(coordinates(raster_cat_krig_LL)[,2])
 lon_dim <- unique(coordinates(raster_cat_krig_LL)[,1])
-<<<<<<< HEAD
-tim_dim <- all_dates[valid_dates]
-
-=======
 tim_dim <- all_dates[valid_dates==1]
->>>>>>> cdb32d1b93970a89d6837dbff39a46e7da7420ee
 nc.krig <- create.nc("odin_krig.nc")
 # Dimensions specifications
 dim.def.nc(nc.krig, "time", unlim=TRUE)
@@ -220,7 +215,8 @@ close.nc(nc.krig)
 ## Create MP4 video ####
 
 system(paste0("ffmpeg -f image2 -r 6 -pattern_type glob -i '",
-              "~/data/ODIN_SD/Gisborne/krig/*.png' ",
+              plot_path,
+              "krig/*.png' ",
               plot_path,
               "krig/",
               format(min(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),"_",

@@ -4,6 +4,8 @@
 # Authors:
 #         Gustavo Olivares
 #########################################################################
+# NOTE THAT IT IS RUNNING FOR PM10
+#########################################################################
 ##### Load relevant packages #####
 library(librarian) # To more flexibly manage packages
 shelf(readr,
@@ -51,10 +53,13 @@ centre_lon <- mean(all.data.tavg$lon)
 ## Prepare the map to plot animations #####
 
 # Get the basemap
-ca <- get_map(
+
+ca <- get_googlemap(
   c(lon=centre_lon,lat=centre_lat),
-  zoom=13,crop=T,
-  scale="auto",color="bw",source="google",
+  zoom=13,
+  scale=2,
+  color="bw",
+  key = "AIzaSyACi3pNvPQTxZWx5u0nTtke598dPqdgySg",
   maptype="terrain") # can change to terrain
 
 # Re-project to NZTM #####
@@ -83,12 +88,12 @@ grid <- SpatialPixelsDataFrame(grid,
 
 
 # Get rid of NA containing rows
-all.data.tavg <- subset(all.data.tavg,!is.na(PM2.5))
+all.data.tavg <- subset(all.data.tavg,!is.na(PM10))
 all_dates <- sort(unique(all.data.tavg$date))
 valid_dates <- FALSE * (1:length(all_dates))
 # limits for colorscales #####
-cmin <- min(all.data.tavg$PM2.5)
-cmax <- max(all.data.tavg$PM2.5) * 0.5
+cmin <- min(all.data.tavg$PM10)
+cmax <- max(all.data.tavg$PM10) * 0.5
 ## Interpolate and plot #####
 ndates <- length(all_dates)
 breaks <- as.numeric(quantile((1:ndates),c(0,0.5,1), type = 1))
@@ -102,7 +107,7 @@ for (d_slice in (1:ndates)){
   }
   valid_dates[d_slice] <- TRUE
 
-  surf.idw <- idw(PM2.5 ~ 1,newdata = grid, locations = c_data, idp = 1,na.action = na.omit)
+  surf.idw <- idw(PM10 ~ 1,newdata = grid, locations = c_data, idp = 1,na.action = na.omit)
   surf.idw$timestamp <-d_slice
   proj4string(surf.idw) <- CRS('+init=epsg:2193')
   
@@ -134,7 +139,7 @@ for (d_slice in (1:ndates)){
                                                      fill = rep(rtp[[1]], each = 5)),
                                       size = 0,
                                       alpha = 0.85) +
-    scale_fill_gradient(low="white", high="red",limits=c(0, cmax), name = "PM2.5", oob=squish) +
+    scale_fill_gradient(low="white", high="red",limits=c(0, cmax), name = "PM10", oob=squish) +
     geom_point(data=points,aes(x=lon,y=lat),colour = "black") +
     ggtitle(paste(as.character(all_dates[d_slice]+12*3600),"NZST"))
   ggsave(filename=paste0(plot_path,'idw/',format(all_dates[d_slice]+12*3600,format = "%Y-%m-%d %H:%M"),'.png'), plot=map_out, width=6, height=6, units = "in")
@@ -152,7 +157,7 @@ save(list = c('raster_cat_idw_LL'),file = paste0("raster_odin_LL_IDW.RData"))
 # IDW
 lat_dim <- unique(coordinates(raster_cat_idw_LL)[,2])
 lon_dim <- unique(coordinates(raster_cat_idw_LL)[,1])
-tim_dim <- all_dates[valid_dates]
+tim_dim <- all_dates[valid_dates==1]
 nc.idw <- create.nc("odin_idw.nc")
 # Dimensions specifications
 dim.def.nc(nc.idw, "time", unlim=TRUE)
@@ -175,13 +180,13 @@ att.put.nc(nc.idw,"longitude","standard_name","NC_CHAR","longitude")
 
 var.def.nc(nc.idw,"pm2p5","NC_FLOAT",c("longitude","latitude","time"))
 att.put.nc(nc.idw,"pm2p5","units","NC_CHAR","ug m**-3")
-att.put.nc(nc.idw,"pm2p5","long_name","NC_CHAR","Mass concentration of PM2.5 ambient aerosol particles in air")
+att.put.nc(nc.idw,"pm2p5","long_name","NC_CHAR","Mass concentration of PM10 ambient aerosol particles in air")
 att.put.nc(nc.idw,"pm2p5","standard_name","NC_CHAR","mass_concentration_of_pm2p5_ambient_aerosol_particles_in_air")
 att.put.nc(nc.idw,"pm2p5","cell_methods","NC_CHAR","time: mean (interval: 15 minutes)")
 att.put.nc(nc.idw,"pm2p5","missing_value","NC_FLOAT",-999.9)
 
 # Global attributes
-att.put.nc(nc.idw,"NC_GLOBAL","title","NC_CHAR","PM2.5 interpolated surface (Inverse Square Distance)")
+att.put.nc(nc.idw,"NC_GLOBAL","title","NC_CHAR","PM10 interpolated surface (Inverse Square Distance)")
 att.put.nc(nc.idw,"NC_GLOBAL","Conventions","NC_CHAR","CF-1.7")
 att.put.nc(nc.idw,"NC_GLOBAL","Institution","NC_CHAR","NIWA (National Institute of Water and Atmospheric Research, Auckland, New Zealand)")
 att.put.nc(nc.idw,"NC_GLOBAL","project_id","NC_CHAR","CONA - 2018")
@@ -197,15 +202,16 @@ rast_data <- getValues(raster_cat_idw_LL)[,(1:length(tim_dim))]
 dim(rast_data) <- c(length(lon_dim),
                     length(lat_dim),
                     length(tim_dim))
-var.put.nc(nc.idw,"pm2p5",rast_data)
+var.put.nc(nc.idw,"pm10",rast_data)
 
 # Close the file and save
 close.nc(nc.idw)
 
 ## Create MP4 video ####
 system(paste0("ffmpeg -f image2 -r 6 -pattern_type glob -i '",
-              "~/data/ODIN_SD/Gisborne/idw/*.png",
-              plot_path,
+              path.expand(plot_path),
+              "idw/*.png' ",
+              path.expand(plot_path),
               "idw/",
               format(min(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),"_",
               format(max(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),
@@ -213,6 +219,11 @@ system(paste0("ffmpeg -f image2 -r 6 -pattern_type glob -i '",
 
 ## Upload data ####
 
-RCurl::ftpUpload(paste0(data_path,"odin_idw.nc"),
-                 "ftp://ftp.niwa.co.nz/incoming/GustavoOlivares/odin_alexandra/odin_idw_gisborne.nc")
+RCurl::ftpUpload(paste0(path.expand(plot_path),"odin_idw.nc"),
+                 "ftp://ftp.niwa.co.nz/incoming/GustavoOlivares/Gisborne/odin_idw_gisborne_PM10.nc")
+
+RCurl::ftpUpload(paste0(path.expand(plot_path),"idw/",format(min(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),"_",
+                        format(max(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),
+                        ".mp4"),
+                 "ftp://ftp.niwa.co.nz/incoming/GustavoOlivares/Gisborne/odin_idw_gisborne_PM10.mp4")
 

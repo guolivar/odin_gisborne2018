@@ -155,7 +155,7 @@ save(list = c('raster_cat_idw2_LL'),file = paste0("raster_odin_LL_IDW.RData"))
 # IDW2
 lat_dim <- unique(coordinates(raster_cat_idw2_LL)[,2])
 lon_dim <- unique(coordinates(raster_cat_idw2_LL)[,1])
-tim_dim <- all_dates[valid_dates]
+tim_dim <- all_dates[valid_dates==1]
 nc.idw2 <- create.nc("odin_idw2.nc")
 # Dimensions specifications
 dim.def.nc(nc.idw2, "time", unlim=TRUE)
@@ -209,8 +209,7 @@ close.nc(nc.idw2)
 ## Create MP4 video ####
 
 system(paste0("ffmpeg -f image2 -r 6 -pattern_type glob -i '",
-              "/home/gustavo/data/ODIN_SD/Gisborne/idw2/*.png'",
-              "*.png' ",
+              "/home/gustavo/data/ODIN_SD/Gisborne/idw2/*.png' ",
               plot_path,
               "idw2/",
               format(min(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),"_",
