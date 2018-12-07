@@ -22,11 +22,26 @@ shelf(readr,
       ggplot2,
       scales)
 #' ## Set constants
-data_path <- "~/data/ODIN_SD/Gisborne/WORKING/"
+data_path <- path.expand("~/data/ODIN_SD/Gisborne/WORKING/")
 folders_list <- dir(data_path,pattern = '00')
 # Define time average for output
 tavg <- '1 day'
-#' ## Load data
+#' ## Load BAM data
+#'
+#'  
+
+bam.data <- read_csv(paste0(data_path,"BAM data PM10.csv"),
+                     col_types = cols(Day = col_character(),
+                                      SiteName = col_skip(),
+                                      Time = col_character()))
+bam.data$ODINsn <- 'GDC'
+# Move the date to GMT for consistency
+bam.data$date <- as.POSIXct(paste(bam.data$Day,bam.data$Time),format = "%d/%m/%Y %I:%M:%S %p", tz= "GMT") - 12*3600
+bam.data.tavg <- timeAverage(bam.data,avg.time = tavg)
+bam_lat <- -(38 + 39/60 + 37.20961/3600)
+bam_lon <- 178 + 00/60 + 42.5312/3600
+
+#' ## Load ODIN data
 #'
 #'  Cycle through the folders to work with all the DATA.TXT files
 #'  
@@ -100,6 +115,7 @@ for (i in (1:length(folders_list))){
     rm(odin.data)
   }
 }
+
 
 #'
 #'  Get devices locations
@@ -181,6 +197,16 @@ remove_idx <- ((all.data.tavg$ODINsn == "SD0005") | (all.data.tavg$ODINsn == "SN
 all.data.tavg[remove_idx,] <- NA
 all.data.tavg <- na.exclude(all.data.tavg)
 
+# Merge BAM dataset with TAVG
+bam.data.tavg <- subset(bam.data.tavg, (date >= start_date) & (date <= end_date))
+
+ggplot(data = all.data.tavg, aes(x=date)) +
+  geom_line(data = subset(all.data.tavg,ODINsn == "SD0011"),aes(y=PM10,colour = "G6")) +
+  geom_line(data = subset(all.data.tavg,ODINsn == "SD0025"),aes(y=PM10,colour = "G1")) +
+  geom_line(data = subset(all.data.tavg,ODINsn == "SD0010"),aes(y=PM10,colour = "G16")) +
+  geom_line(data = bam.data.tavg, aes(x=date,y=PM10,colour = "GDC"),size = 2)
+
+
 #'
 #' ## Time series
 #' 
@@ -230,18 +256,24 @@ ca <- get_googlemap(
 
 #' ### PM~2.5~
 ggmap(ca) + 
+  geom_label(data = odin_locations, aes(x=lon,y=lat,label = siteid), nudge_x = -0.004) +
   geom_point(data=as.data.frame(summary_mean_map),aes(x=lon,y=lat,colour = PM2.5),size = 5) +
   scale_colour_continuous(low="white", high="red",limits=c(0, max(summary_mean_map$PM2.5)),
                           name = "PM2.5", oob=squish)
 
 #' ### PM~10~
-ggmap(ca) + 
-  geom_point(data=as.data.frame(summary_mean_map),aes(x=lon,y=lat,colour = PM10),size = 5) +
+ggmap(ca) +  
+  geom_label(data = odin_locations, aes(x=lon,y=lat,label = siteid), nudge_x = -0.004) +
+  geom_label(aes(x=bam_lon,y=bam_lat,label = 'BAM'),size = 5, nudge_y = 0.004) +
+  geom_point(data = as.data.frame(summary_mean_map),aes(x=lon,y=lat,colour = PM10),size = 5) +
+  geom_point(aes(x=bam_lon,y=bam_lat,colour = mean(bam.data.tavg$PM10)),size = 5) +
+  geom_point(aes(x=bam_lon,y=bam_lat),size = 1.3, colour = 'black') +
   scale_colour_continuous(low="white", high="red",limits=c(0, max(summary_mean_map$PM10)),
                           name = "PM10", oob=squish)
 
 #' ### PM~coarse~
-ggmap(ca) + 
+ggmap(ca) +  
+  geom_label(data = odin_locations, aes(x=lon,y=lat,label = siteid), nudge_x = -0.004) +
   geom_point(data=as.data.frame(summary_mean_map),aes(x=lon,y=lat,colour = PM10 - PM2.5),size = 5) +
   scale_colour_continuous(low="white", high="red",limits=c(0, max(summary_mean_map$PM10 - summary_mean_map$PM2.5)),
                           name = "PMcoarse", oob=squish)
@@ -252,4 +284,4 @@ ggmap(ca) +
 save(all.data,file = 'alldata.RData')
 save(all.data.tavg,file = 'alldataTAVG.RData')
 data.output <- all.data.tavg[,c('date','PM2.5','PM10','Temperature','RH','ODINsn')]
-write_excel_csv(data.output,'./gisborne_10min.csv')
+write_excel_csv(data.output,paste0('./gisborne_',tavg,'.csv'))

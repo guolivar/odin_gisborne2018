@@ -30,8 +30,8 @@ shelf(readr,
       purrr,
       magick)
 # Set the data folder ####
-data_path <- "~/data/ODIN_SD/Gisborne/WORKING/"
-plot_path <- "~/data/ODIN_SD/Gisborne/"
+data_path <- path.expand("~/data/ODIN_SD/Gisborne/WORKING/")
+plot_path <- path.expand("~/data/ODIN_SD/Gisborne/")
 
 # Load data
 load('alldata.RData')
@@ -192,7 +192,7 @@ att.put.nc(nc.krig,"pm2p5","missing_value","NC_FLOAT",-999.9)
 
 # Global attributes
 att.put.nc(nc.krig,"NC_GLOBAL","title","NC_CHAR","PM2.5 interpolated surface (Inverse Square Distance)")
-att.put.nc(nc.krig,"NC_GLOBAL","Conventions","NC_CHAR","CF-1.7")
+att.put.nc(nc.krig,"NC_GLOBAL","Conventions","NC_CHAR","CF-1.6")
 att.put.nc(nc.krig,"NC_GLOBAL","Institution","NC_CHAR","NIWA (National Institute of Water and Atmospheric Research, Auckland, New Zealand)")
 att.put.nc(nc.krig,"NC_GLOBAL","project_id","NC_CHAR","CONA - 2018")
 att.put.nc(nc.krig,"NC_GLOBAL","history","NC_CHAR",paste0(format(max(all.data.tavg$date),format = "%Y%m%d"),
@@ -215,7 +215,8 @@ close.nc(nc.krig)
 ## Create MP4 video ####
 
 system(paste0("ffmpeg -f image2 -r 6 -pattern_type glob -i '",
-              "~/data/ODIN_SD/Gisborne/krig/*.png' ",
+              plot_path,
+              "krig/*.png' ",
               plot_path,
               "krig/",
               format(min(all.data.tavg$date) + 12*3600,format = "%Y%m%d"),"_",

@@ -8,7 +8,10 @@
 # Prepare libraries
 library(librarian) # To more flexibly manage packages
 shelf(readr,
-      openair)
+      openair,
+      ggplot2)
+# Auxiliary functions
+ma <- function(x,n=5){filter(x,rep(1/n,n), sides=2)}
 # Set the data folder ####
 data_path <- "~/data/ODIN_SD/Gisborne/WORKING/"
 folders_list <- dir(data_path,pattern = '00')
@@ -64,20 +67,35 @@ for (i in (1:length(folders_list))){
                             'Temperature',
                             'RH',
                             'ODINsn')]
+  x.odin.data <- odin.data
+  # Uniform 5 minute data
+  x.odin.data <- timeAverage(odin.data,avg.time = '5 min',start.date = "2018-06-22 12:00:00")
+  x.odin.data$ODINsn <- odin.data$ODINsn[1]
   # Construct the ALLDATA frame
   if (i == 1){
     # This is the first iteration so we just copy the "odin.data" dataframe
-    all.data <- odin.data
-    all.data.tavg <- timeAverage(odin.data,avg.time = tavg)
-    all.data.tavg$ODINsn <- odin.data$ODINsn[1]
+    all.data <- x.odin.data
+    # Calculate 60 minute CENTERED running mean ... column by column
+    tmp1 <- x.odin.data
+    for (column in c(2:6)){
+      tmp1[,column] <- ma(x.odin.data[,column],60)
+    }
+    all.data.tavg <- timeAverage(tmp1,avg.time = tavg)
+    all.data.tavg$ODINsn <- x.odin.data$ODINsn[1]
   } else {
     # We already have "all.data" so we need to append the current "odin.data"
-    all.data <- rbind(all.data,odin.data)
-    tmp1 <- timeAverage(odin.data,avg.time = tavg)
-    tmp1$ODINsn <- odin.data$ODINsn[1]
-    all.data.tavg <- rbind(all.data.tavg,tmp1)
+    all.data <- rbind(all.data,x.odin.data)
+    # Calculate 60 minute CENTERED running mean ... column by column
+    tmp1 <- x.odin.data
+    for (column in c(2:6)){
+      tmp1[,column] <- ma(x.odin.data[,column],60)
+    }
+    tmp2 <- timeAverage(tmp1,avg.time = tavg)
+    tmp2$ODINsn <- x.odin.data$ODINsn[1]
+    all.data.tavg <- rbind(all.data.tavg,tmp2)
     # Remove all.data to clean for next iteration
-    rm(odin.data)
+    #rm(x.odin.data)
+    #rm(odin.data)
   }
 }
 
