@@ -25,7 +25,7 @@ shelf(readr,
 data_path <- "~/data/ODIN_SD/Gisborne/WORKING/"
 folders_list <- dir(data_path,pattern = '00')
 # Define time average for output
-tavg <- '1 day'
+tavg <- '30 min'
 #' ## Load data
 #'
 #'  Cycle through the folders to work with all the DATA.TXT files
@@ -205,6 +205,12 @@ ggplot(data = all.data.tavg, aes(x=date)) +
 #' 
 ggplot(data = all.data.tavg, aes(x=date)) +
   geom_line(aes(y=RH,colour = ODINsn))
+
+ggplot(data = all.data.tavg, aes(x=RH)) +
+  geom_point(aes(y=PM2.5,colour = ODINsn))
+
+ggplot(data = all.data.tavg, aes(x=Temperature)) +
+  geom_point(aes(y=PM2.5,colour = ODINsn))
 
 
 #'
